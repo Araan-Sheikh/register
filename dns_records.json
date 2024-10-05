@@ -1,4 +1,19 @@
 {
-    "records": []
+    "records": [
+        {
+      "type": "A",
+      "name": ".is-cod.in",
+      "content": "precious-mandazi-45660f.netlify.app",
+      "ttl": 3600,
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "api.is-cod.in",
+      "content": "precious-mandazi-45660f.netlify.app",
+      "ttl": 3600,
+      "proxied": true
+    }
+    ]
   }
   
