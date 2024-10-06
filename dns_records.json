@@ -1,6 +1,6 @@
 {
     "records": [
-        "type": "MX", "name": "is-cod.in", "content": "mail1.provider.com", "priority": 10, "ttl": 3600},
+    {"type": "MX", "name": "is-cod.in", "content": "mail1.provider.com", "priority": 10, "ttl": 3600},
     {"type": "MX", "name": "is-cod.in", "content": "mail2.provider.com", "priority": 20, "ttl": 3600},
     {"type": "MX", "name": "is-cod.in", "content": "mail3.provider.com", "priority": 30, "ttl": 3600},
     {"type": "CNAME", "name": "alias.is-cod.in", "content": "target.domain.com", "ttl": 3600}
