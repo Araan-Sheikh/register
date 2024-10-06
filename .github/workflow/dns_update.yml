@@ -1,0 +1,52 @@
+yaml
+name: DNS Update
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  update-dns:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install jq
+        run: sudo apt-get install jq
+
+      - name: Update DNS Records
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: |
+          NEW_RECORDS="${{ github.event.pull_request.body }}"
+          
+          # Append new records to JSON file
+          jq --argjson newRecords "$NEW_RECORDS" '.records += $newRecords.records' dns_records.json > tmp.json && mv tmp.json dns_records.json
+
+          # Iterate over each record and update Cloudflare
+          for row in $(echo "${NEW_RECORDS}" | jq -c '.records[]'); do
+            TYPE=$(echo "$row" | jq -r .type)
+
+            if [ "$TYPE" == "MX" ]; then
+              # If MX, include the priority
+              curl -X POST "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/dns_records" \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data "{ \"type\": \"$TYPE\", \"name\": \"$(echo $row | jq -r .name)\", \"content\": \"$(echo $row | jq -r .content)\", \"priority\": $(echo $row | jq -r .priority), \"ttl\": $(echo $row | jq -r .ttl) }"
+            else
+              # For A and CNAME records
+              curl -X POST "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/dns_records" \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data "$row"
+            fi
+          done
+
+          # Optionally, commit the updated dns_records.json back to the repo
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add dns_records.json
+          git commit -m "Update DNS records"
+          git push
